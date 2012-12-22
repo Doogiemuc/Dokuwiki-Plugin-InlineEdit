@@ -1,0 +1,13 @@
+/**
+ * stylesheet for inlineEdit
+ */
+ 
+.editable {
+  padding: 0px;
+  margin:  0px;
+  background-color: #EEF;
+}
+
+.editableHighlight {
+  border-right: 10px solid blue;
+}

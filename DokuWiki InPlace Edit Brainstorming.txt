@@ -1,0 +1,67 @@
+=== Dokuwiki Editable Region Plugin ===
+
+Mark a <P>aragraph as editable in wiki source with 
+
+  <editable>Optional default text</editable>
+
+Requirenemnt: This should also work within table cells.
+
+The EditableRegionPlugin creates a <p> element with a inlineEdit3 action
+
+<code lang="Javascript">
+    var updateParagraph = function(element){
+        //TODO: I don't need an AJAX request but a normal form post for section edit
+    
+    
+		var request = {
+			type:'edit',
+			body:{xpath:element.xpath(),content:element.get('html')}
+		};
+		new Request.JSON({url:"dokuwiki/lib/plugin/saveParagraph.php",data:{json:JSON.encode(request)},
+			onComplete:function(response){
+				if(!response.success)alert(response.body);
+			}
+		}).post();
+	};
+
+    $$('div.sandbox p').each(function(el){
+		el.addEvent('click',function(){this.inlineEdit({
+				onComplete:updateParagraph,
+				stripHtml:true
+			});
+		});
+	});
+<code>
+
+=== Feature Requests / Stories ===
+   * editable paragraph is shown with a 'highlighted' background color   
+   * editable paragraph shows "(double)click to edit" onMouseOver
+   * there must be a 'save' and 'cancel' button near the editable reagion.
+
+=== Code Flow ===
+   * Wikitext contains <editable>....</editable>
+   * syntax plugin ''dokuwiki_plugin_inlineEdit'' renders this.
+      o actions.act_edit()  - here I can find how to prepare the edit form HTTP parameters
+      o html.html_edit() 
+   - User (doueble)clicks on editable paragraph region 
+   * inlineEdit does its work, user edits. Plain clientside JavaScript!
+   - user clicks save.
+   * do=save HTTP request back to DW to actions.act_save just as the edit form would send it.
+   * dokuwiki receives 
+
+
+Normally:  show ->              edit -> save
+But we do: show ->  client side edit -> save
+
+
+=== Herausgefunden ===
+   * changecheck ist einfach md5(wikitext) - darüber wird festgestellt, ob die Seite sich geändert hat.
+     Wird in html_edit einfach durchgeschleift
+   * target ist immer per default 'section'. Darüber können andere editoren für spezielle
+     sections gesteuert werden. siehe:  https://www.dokuwiki.org/devel:section_editor
+     Mmhh, contradicts a bit. This provides and edit button. But what inlinedit3 does is client side JS editing.
+
+
+
+=== Open questions ===
+Strip HTML from edit? => No dont strip, but quote HTML characters, ie. simply show what has been entered.
