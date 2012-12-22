@@ -22,11 +22,22 @@ var editable4 = {
     stripHtml:  true
   },
 
-  init: function(elem) {
-    $(elem).hover(
-      function() { $(elem).addClass("editableHighlight"); },
-      function() { $(elem).removeClass("editableHighlight"); }
+  /**
+   * initialize the given paragraph element as an editable paragraph.
+   * @param elem a CSS selector that jQuery understands, e.g. "div.p"
+   */
+  init: function(el) {
+    var self = this;
+    this.elem = $(el);
+    this.elem.hover(
+      function() { self.elem.addClass("editableHighlight"); },
+      function() { self.elem.removeClass("editableHighlight"); }
     );
+
+    this.elem.dblclick(function(event) {
+      debout("elem="+self.elem);
+      self.startEditing(self.elem);
+    });
   },
 
   /**
@@ -34,11 +45,10 @@ var editable4 = {
    * param  the <p> [HTMLObject] (You can simply pass 'this' from the paragraphs onDoubleClick handler.)
    */
   startEditing: function(elem) {
+    debout("startEditing:"+elem);
     //--- create new textarea
-    this.element        = elem;
-    this.originalText   = $(elem).html().replace(/<br>/gi,"\n");
-    debout(this.originalText);
-    this.originalWidth  = $(elem).width();
+    this.originalText   = this.elem.html().replace(/<br>/gi,"\n");
+    this.originalWidth  = this.elem.width();
     this.input = $('<textarea></textarea>');
     this.input.addClass(this.options.inputClass);
     this.input.val(this.originalText); 
@@ -56,27 +66,33 @@ var editable4 = {
     var styleNames = ['width','height','padding-top','padding-right','padding-bottom','padding-left','margin-top','margin-right','margin-bottom','margin-left','font-family','font-size','font-weight','line-height','border-top','border-right','border-bottom','border-left','background-color','color'];
     for (var i in styleNames) {
       //DEBUG: $(element).after("<pre>"+styleNames[i]+"="+$(element).css(styleNames[i])+"</pre>");
-      this.input.css(styleNames[i], $(this.element).css(styleNames[i]));
+      this.input.css(styleNames[i], this.elem.css(styleNames[i]));
     }
     //MAYBE: this.input.css('left-margin', $(element).css('left-margin')-1);
     
     //--- hide original paragraph and replace it with the new textarea
-    $(this.element).css({'visibility':'hidden', 'position':'absolute'});
-    this.input.insertAfter(this.element);
+    this.elem.css({'visibility':'hidden', 'position':'absolute'});
+    this.input.insertAfter(this.elem);
     this.input.focus();
     //MAYBE: fire event this.onLoad(element,input);        
   },
   
+  /**
+   * Called after a key has been pressed and released. 
+   * Updates the content of the (invisible) paragraph.
+   * Adjusts the height of the textfield if the return key has been pressed.
+   * When user pressed escape, then the original content of the paragraph will be restored.
+   */
   keyup: function(e) {
     debout("keyup: type="+e.type+" "+e.which);
-    $(this.element).html( e.which==13 ? this.getContent()+"&nbsp;" : this.getContent() ); // enter key
+    this.elem.html( e.which==13 ? this.getContent()+"&nbsp;" : this.getContent() ); // enter key
     var self=this;
     if(e.which==13) { 
       this.input.bind('keydown.editable4', function(event) { self.newLine() });
-    } 
-    this.input.height($(this.element).height);
+    }
+    this.input.height(this.elem.height());
     if (e.which==27) {  // escape key
-      $(this.element).text(this.originalText);
+      this.elem.text(this.originalText);
       this.endEditing();
     }
   },
@@ -94,25 +110,27 @@ var editable4 = {
   
   newLine: function() {
     debout("newLine");
-    this.element.innerHTML=this.element.innerHTML.replace("&nbsp;","");
+    this.elem.html(this.elem.html().replace("&nbsp;",""));
 	this.input.unbind('keydown.editable4');  // remove event handler
   },
   
   complete: function(e) {
     debout("complete: type="+e.type);
-    $(this.element).html(this.getContent());
+    this.elem.html(this.getContent());
     this.endEditing();
   },
   
   endEditing: function() {
     debout("end event");
     this.input.remove(); // delete textarea
-    $(this.element).css({'visibility':'visible', 'position':'relative', 'width':this.originalWidth});
+    this.elem.css({'visibility':'visible', 'position':'relative', 'width':this.originalWidth});
   }
 }
 
 var debmsg = "";
 debout = function(msg) {
+  msg.replace("<", "&lt;");
+  msg.replace(">", "&gt;");
   debmsg += msg + "<br/>";
   $("#deb").html("<pre>"+debmsg+"</pre>");
 }
@@ -126,12 +144,11 @@ $(document).ready( function() {
   editable4.init("p.editable")
   
   
-  /** start editing onDoubleClick */
+  /** start editing onDoubleClick 
   $("p.editable").dblclick(function() {
-    //alert("You double clicked on editable paragraph.");
     editable4.startEditing(this);
   });
-  
+  */  
 });
  
  
