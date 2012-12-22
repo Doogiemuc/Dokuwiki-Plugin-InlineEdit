@@ -65,7 +65,6 @@ var editable4 = {
     //---  copy all styles from editable paragraph to new textarea
     var styleNames = ['width','height','padding-top','padding-right','padding-bottom','padding-left','margin-top','margin-right','margin-bottom','margin-left','font-family','font-size','font-weight','line-height','border-top','border-right','border-bottom','border-left','background-color','color'];
     for (var i in styleNames) {
-      //DEBUG: $(element).after("<pre>"+styleNames[i]+"="+$(element).css(styleNames[i])+"</pre>");
       this.input.css(styleNames[i], this.elem.css(styleNames[i]));
     }
     //MAYBE: this.input.css('left-margin', $(element).css('left-margin')-1);
@@ -74,7 +73,6 @@ var editable4 = {
     this.elem.css({'visibility':'hidden', 'position':'absolute'});
     this.input.insertAfter(this.elem);
     this.input.focus();
-    //MAYBE: fire event this.onLoad(element,input);        
   },
   
   /**
@@ -84,7 +82,7 @@ var editable4 = {
    * When user pressed escape, then the original content of the paragraph will be restored.
    */
   keyup: function(e) {
-    debout("keyup: type="+e.type+" "+e.which);
+    //debout("keyup: type="+e.type+" "+e.which);
     this.elem.html( e.which==13 ? this.getContent()+"&nbsp;" : this.getContent() ); // enter key
     var self=this;
     if(e.which==13) { 
@@ -109,19 +107,19 @@ var editable4 = {
   },
   
   newLine: function() {
-    debout("newLine");
+    //debout("newLine");
     this.elem.html(this.elem.html().replace("&nbsp;",""));
 	this.input.unbind('keydown.editable4');  // remove event handler
   },
   
   complete: function(e) {
-    debout("complete: type="+e.type);
+    //debout("complete: type="+e.type);
     this.elem.html(this.getContent());
     this.endEditing();
   },
   
   endEditing: function() {
-    debout("end event");
+    //debout("end event");
     this.input.remove(); // delete textarea
     this.elem.css({'visibility':'visible', 'position':'relative', 'width':this.originalWidth});
   }
@@ -143,12 +141,7 @@ $(document).ready( function() {
   /** highlight every editable paragraph on mouseOver */
   editable4.init("p.editable")
   
-  
-  /** start editing onDoubleClick 
-  $("p.editable").dblclick(function() {
-    editable4.startEditing(this);
-  });
-  */  
+
 });
  
  
