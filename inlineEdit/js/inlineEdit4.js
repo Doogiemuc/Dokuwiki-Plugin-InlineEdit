@@ -11,7 +11,6 @@
  * 
  */
 
-
 /** 
  * main editable4 object ("class")
  */
@@ -19,7 +18,7 @@ var editable4 = {
 
   options: {
     inputClass: 'editableTextarea',
-    stripHtml:  true
+    stripHtml: false
   },
 
   /**
@@ -33,28 +32,24 @@ var editable4 = {
       function() { self.elem.addClass("editableHighlight"); },
       function() { self.elem.removeClass("editableHighlight"); }
     );
-
     this.elem.dblclick(function(event) {
-      debout("elem="+self.elem);
       self.startEditing(self.elem);
     });
   },
 
   /**
    * start editing a paragraph
-   * @param elem a jQuery object representing the editable paragraph
+   * @param elem a jQuery object representing the paragraph to edit
    */
   startEditing: function(elem) {
-    debout("startEditing:"+elem);
+    //debout("startEditing:"+elem);
     //--- create new textarea
     this.originalText   = this.elem.html().replace(/<br>/gi,"\n");
     this.originalWidth  = this.elem.width();
     this.input = $('<textarea></textarea>');
     this.input.addClass(this.options.inputClass);
     this.input.val(this.originalText); 
-    
-    debout(this.originalText);
-    
+        
     //--- hock into events
     var self=this;  
     this.input.keyup( function(event) {
@@ -85,11 +80,7 @@ var editable4 = {
    */
   keyup: function(e) {
     //debout("keyup: type="+e.type+" "+e.which);
-    this.elem.html( e.which==13 ? this.getContent()+"&nbsp;" : this.getContent() ); 
-    var self=this;
-    if(e.which==13) { 
-      this.input.bind('keydown.editable4', function(event) { self.newLine() });
-    }
+    this.elem.html( this.getContent() ); 
     this.input.height(this.elem.height());
     if (e.which==27) {  // escape key
       this.elem.html(this.originalText.replace(/\n/gi,"<br>"));
@@ -98,23 +89,19 @@ var editable4 = {
   },
   
   /** 
-   * returns the content of the input textarea. 
-   * html tags will be stripped if option 'stripHtml' is true.
-   * Newline characters will then be replaced by <br> tags.
+   * returns the value of the input <textarea> as HTML
+   * If stripHtml is true, then html tags that have been entered will be removed.
+   * Newline characters from the textarea will always be returned as <br>
    */
   getContent: function() {
     var content = this.input.val();
-    debout("getContent()="+content);
+    //debout("getContent()="+content);
+    content = content.replace(/<(\/?)(\w+)([^>])/, "&lt;$1$2$3");
+    content = content.replace(/<\/(\W)/, "&lt;/$1");
     if(this.options.stripHtml) content = content.replace(/(<([^>]+)>)/ig,"");
     return(content.replace(/\n/gi,"<br>"));
   },
-  
-  newLine: function() {
-    //debout("newLine");
-    this.elem.html(this.elem.html().replace("&nbsp;",""));
-	this.input.unbind('keydown.editable4');  // remove event handler
-  },
-  
+    
   complete: function(e) {
     //debout("complete: type="+e.type);
     this.elem.html(this.getContent());
