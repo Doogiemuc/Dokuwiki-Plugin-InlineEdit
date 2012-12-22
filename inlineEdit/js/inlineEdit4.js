@@ -42,7 +42,7 @@ var editable4 = {
 
   /**
    * start editing a paragraph
-   * param  the <p> [HTMLObject] (You can simply pass 'this' from the paragraphs onDoubleClick handler.)
+   * @param elem a jQuery object representing the editable paragraph
    */
   startEditing: function(elem) {
     debout("startEditing:"+elem);
@@ -52,6 +52,8 @@ var editable4 = {
     this.input = $('<textarea></textarea>');
     this.input.addClass(this.options.inputClass);
     this.input.val(this.originalText); 
+    
+    debout(this.originalText);
     
     //--- hock into events
     var self=this;  
@@ -83,14 +85,14 @@ var editable4 = {
    */
   keyup: function(e) {
     //debout("keyup: type="+e.type+" "+e.which);
-    this.elem.html( e.which==13 ? this.getContent()+"&nbsp;" : this.getContent() ); // enter key
+    this.elem.html( e.which==13 ? this.getContent()+"&nbsp;" : this.getContent() ); 
     var self=this;
     if(e.which==13) { 
       this.input.bind('keydown.editable4', function(event) { self.newLine() });
     }
     this.input.height(this.elem.height());
     if (e.which==27) {  // escape key
-      this.elem.text(this.originalText);
+      this.elem.html(this.originalText.replace(/\n/gi,"<br>"));
       this.endEditing();
     }
   },
@@ -102,6 +104,7 @@ var editable4 = {
    */
   getContent: function() {
     var content = this.input.val();
+    debout("getContent()="+content);
     if(this.options.stripHtml) content = content.replace(/(<([^>]+)>)/ig,"");
     return(content.replace(/\n/gi,"<br>"));
   },
@@ -127,8 +130,8 @@ var editable4 = {
 
 var debmsg = "";
 debout = function(msg) {
-  msg.replace("<", "&lt;");
-  msg.replace(">", "&gt;");
+  msg = msg.replace(/</ig, "&lt;");
+  msg = msg.replace(/>/ig, "&gt;");
   debmsg += msg + "<br/>";
   $("#deb").html("<pre>"+debmsg+"</pre>");
 }
