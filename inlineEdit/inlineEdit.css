@@ -5,9 +5,31 @@
 .editable {
   padding: 0px;
   margin:  0px;
+  width: 500px;
   background-color: #EEF;
 }
 
 .editableHighlight {
-  border-right: 10px solid blue;
+  border-right: 1px dotted blue;
+}
+
+.editablePixel {
+  position: relative; 
+  padding: 0px;
+  margin: 0px; 
+  width:0px;
+  height:px;
+  /*border:1px solid red;*/
+}
+
+.hoverMsg {
+  font-family: arial;
+  font-size: 8pt;
+  position: absolute;
+  top:-5px;
+  left:5px;
+  background-color: #EEF;
+  border:1px dotted blue;
+  display: none;
+  z-index:999;
 }

@@ -20,19 +20,38 @@ var editable4 = {
     inputClass: 'editableTextarea',
     stripHtml: false
   },
+  
+  htmlFragments: {
+    hoverMsg: '<div class="hoverMsg">Doubleclick to edit</div>',
+  },
 
   /**
    * initialize the given paragraph element as an editable paragraph.
-   * @param elem a CSS selector that jQuery understands, e.g. "div.p"
+   * @param el a CSS selector that jQuery understands, e.g. "div.p"
    */
   init: function(el) {
     var self = this;
     this.elem = $(el);
+
+    //-- put an invisible pixelDiv before the paragraph so that we can position popups relatively to this coordinates.
+    this.pixelDiv = $('<div class="editablePixel" />');
+    this.hoverDiv = $(this.htmlFragments.hoverMsg);
+    this.pixelDiv.append(this.hoverDiv);
+    this.pixelDiv.insertBefore(this.elem);
+    
     this.elem.hover(
-      function() { self.elem.addClass("editableHighlight"); },
-      function() { self.elem.removeClass("editableHighlight"); }
+      function() { 
+        self.elem.addClass("editableHighlight"); 
+        self.hoverDiv.show(100);
+      },
+      function() { 
+        self.elem.removeClass("editableHighlight"); 
+        self.hoverDiv.hide(100);
+      }
     );
+    
     this.elem.dblclick(function(event) {
+      self.hoverDiv.hide();
       self.startEditing(self.elem);
     });
   },
@@ -44,7 +63,8 @@ var editable4 = {
   startEditing: function(elem) {
     //debout("startEditing:"+elem);
     //--- create new textarea
-    this.originalText   = this.elem.html().replace(/<br>/gi,"\n");
+    this.originalText   = this.elem.html().replace(/<br>/gi,"\n")
+    if (this.originalText == "&nbsp;") this.originalText = "";
     this.originalWidth  = this.elem.width();
     this.input = $('<textarea></textarea>');
     this.input.addClass(this.options.inputClass);
@@ -64,7 +84,6 @@ var editable4 = {
     for (var i in styleNames) {
       this.input.css(styleNames[i], this.elem.css(styleNames[i]));
     }
-    //MAYBE: this.input.css('left-margin', $(element).css('left-margin')-1);
     
     //--- hide original paragraph and replace it with the new textarea
     this.elem.css({'visibility':'hidden', 'position':'absolute'});
@@ -75,13 +94,13 @@ var editable4 = {
   /**
    * Called after a key has been pressed and released. 
    * Updates the content of the (invisible) paragraph.
-   * Adjusts the height of the textfield if the return key has been pressed.
+   * Adjusts the height of the textfield (Necessray, when the return key has been pressed.)
    * When user pressed escape, then the original content of the paragraph will be restored.
    */
   keyup: function(e) {
     //debout("keyup: type="+e.type+" "+e.which);
-    this.elem.html( this.getContent() ); 
-    this.input.height(this.elem.height());
+    this.elem.html( this.getContent()+"&nbsp;" ); // add space to force increase of height with last empty newline
+    this.input.height( this.elem.height() );
     if (e.which==27) {  // escape key
       this.elem.html(this.originalText.replace(/\n/gi,"<br>"));
       this.endEditing();
@@ -89,25 +108,36 @@ var editable4 = {
   },
   
   /** 
-   * returns the value of the input <textarea> as HTML
+   * returns the (textual) value of the input <textarea> as valid HTML
    * If stripHtml is true, then html tags that have been entered will be removed.
    * Newline characters from the textarea will always be returned as <br>
    */
   getContent: function() {
     var content = this.input.val();
-    //debout("getContent()="+content);
-    content = content.replace(/<(\/?)(\w+)([^>])/, "&lt;$1$2$3");
-    content = content.replace(/<\/(\W)/, "&lt;/$1");
+    //fix "partly entered" HTML tags where closing ">" is still missing.
+    content = content.replace(/<(\/?)(\w+)\b([^>])/ig, "&lt;$1$2$3");
+    content = content.replace(/<\/(\W)/ig, "&lt;/$1");
     if(this.options.stripHtml) content = content.replace(/(<([^>]+)>)/ig,"");
-    return(content.replace(/\n/gi,"<br>"));
+    content = content.replace(/\n/gi,"<br>");
+    //debout("getContent()=#"+content+"#");
+    return(content);
   },
-    
+  
+  /**
+   * sets the html of the original paragraph to the entered text and ends editing.
+   */ 
   complete: function(e) {
     //debout("complete: type="+e.type);
-    this.elem.html(this.getContent());
+    var content = this.getContent();
+    content = content.replace(/(<br>)+$/, "");  // delete empty trailing lines
+    if (content.length == 0) content = "&nbsp"; // prevent empty paragraph, cause it would have height==0
+    this.elem.html(content);
     this.endEditing();
   },
   
+  /**
+   * removes the input textarea and displays the original paragraph again (with its new content)
+   */
   endEditing: function() {
     //debout("end event");
     this.input.remove(); // delete textarea
@@ -117,6 +147,7 @@ var editable4 = {
 
 var debmsg = "";
 debout = function(msg) {
+  msg = msg.replace(/&/ig, "&amp;");
   msg = msg.replace(/</ig, "&lt;");
   msg = msg.replace(/>/ig, "&gt;");
   debmsg += msg + "<br/>";
